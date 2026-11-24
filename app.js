@@ -108,7 +108,7 @@ setupCanvasGestures();
 function setupCanvasGestures(){
   const stage=$('.stage'),paper=$('.paper'),reset=document.createElement('button');reset.className='viewReset';reset.hidden=true;reset.setAttribute('aria-label','Reset canvas zoom and position');stage.append(reset);
   let view={scale:1,x:0,y:0},touches=new Map(),gesture=null,multiTouch=false,touchStart=null;
-  const clamp=s=>Math.max(.25,Math.min(8,s));
+  const clamp=s=>Math.max(.25,Math.min(10,s));
   function apply(){paper.style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';reset.hidden=Math.abs(view.scale-1)<.001&&Math.abs(view.x)<.5&&Math.abs(view.y)<.5;reset.textContent=Math.round(view.scale*100)+'% · Reset';render()}
   function resetView(){view={scale:1,x:0,y:0};gesture=null;apply()}
   reset.onclick=resetView;stage.addEventListener('resetview',resetView);window.addEventListener('resize',resetView);
@@ -231,3 +231,4 @@ $('#confirmPermanentDelete').onclick=async()=>{if(projectBusy||!pendingPermanent
 $('#downloadProject').onclick=async()=>{if(drawing||projectBusy)return;stop();finishOpacity();const button=$('#downloadProject');button.disabled=true;button.textContent='Preparing project…';try{const data=await serializeProject(),blob=await packProject(data),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(data.name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'').trim()||'animation')+'.tooni';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('Editable project downloaded · use Import project to reopen it')}catch(e){toast(e.message||'Could not download project.')}finally{button.disabled=false;button.textContent='Download project'}};
 $('#importProject').onclick=()=>{if(!projectBusy)$('#projectBackupFile').click()};
 $('#projectBackupFile').onchange=async e=>{const file=e.target.files[0];e.target.value='';if(!file||projectBusy)return;projectBusy=true;const button=$('#importProject');button.disabled=true;$('#newProject').disabled=true;button.textContent='Importing…';let importedId;try{const data=await unpackProject(file),restored=await restoreFrames(data),name=projectName(data.name),id=crypto.randomUUID();await storeProject({id,name,createdAt:Date.now(),updatedAt:Date.now(),frameCount:data.frames.length,thumbnail:previewFrame(restored[data.index]),data});importedId=id;await refreshProjects();toast('Project imported as a new editable copy')}catch(e){toast(e.message||'Could not import project. Your existing projects are unchanged.')}finally{projectBusy=false;button.disabled=false;$('#newProject').disabled=false;button.textContent='Import project'}if(importedId)await openProject(importedId)};
+
